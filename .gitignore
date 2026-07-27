@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Environment variables (SECRETS — never commit)
+.env
+.env.local
+.env.production
+
+# Build output
+dist/
+build/
+
+# Uploads (user-generated content)
+uploads/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Misc
+*.docx
+*.txt
