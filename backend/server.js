@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const path = require("path");
 const connectDB = require("./src/config/db");
 const validateEnv = require("./src/config/env");
 const errorHandler = require("./src/middleware/errorHandler");
@@ -16,9 +17,12 @@ validateEnv();
 // ─── Initialize Express ────────────────────────────────────────────────────────
 const app = express();
 
-
 // ─── Security Middleware ───────────────────────────────────────────────────────
-app.use(helmet());
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "*",
@@ -39,7 +43,7 @@ if (process.env.NODE_ENV !== "production") {
 app.use("/api/", apiLimiter);
 
 // ─── Static Files (for local image uploads) ────────────────────────────────────
-app.use("/uploads", express.static("uploads"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // ─── API Routes ────────────────────────────────────────────────────────────────
 app.get("/", (req, res) => {
