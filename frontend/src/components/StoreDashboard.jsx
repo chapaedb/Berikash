@@ -38,6 +38,51 @@ export default function StoreDashboard() {
     lng: "38.7525",
   });
 
+  // Subcity preset GPS coordinates dictionary (Addis Ababa)
+  const SUBCITY_COORDS = {
+    Bole: { lat: "8.9892", lng: "38.7885" },
+    Kirkos: { lat: "9.0105", lng: "38.7612" },
+    Arada: { lat: "9.0345", lng: "38.7523" },
+    Yeka: { lat: "9.0284", lng: "38.8055" },
+    "Addis Ketema": { lat: "9.0322", lng: "38.7381" },
+    Lideta: { lat: "9.0118", lng: "38.7405" },
+    "Nifas Silk-Lafto": { lat: "8.9712", lng: "38.7285" },
+    "Kolfe Keranio": { lat: "9.0255", lng: "38.7012" },
+    Gulele: { lat: "9.0688", lng: "38.7422" },
+    "Akaky Kaliti": { lat: "8.8955", lng: "38.7812" },
+    "Lemi Kura": { lat: "9.0125", lng: "38.8355" },
+  };
+
+  const handleSubcityChange = (subcity) => {
+    const coords = SUBCITY_COORDS[subcity] || { lat: "9.0192", lng: "38.7525" };
+    setStoreForm((prev) => ({
+      ...prev,
+      subcity,
+      lat: coords.lat,
+      lng: coords.lng,
+    }));
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setStoreForm((prev) => ({
+          ...prev,
+          lat: pos.coords.latitude.toFixed(6),
+          lng: pos.coords.longitude.toFixed(6),
+        }));
+        alert(`📍 Store coordinates set to your GPS location (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`);
+      },
+      () => {
+        alert("Location access denied or unavailable.");
+      }
+    );
+  };
+
   useEffect(() => {
     fetchStoreAndProducts();
   }, []);
@@ -280,7 +325,7 @@ export default function StoreDashboard() {
                     className="input-field"
                     required
                     value={storeForm.subcity}
-                    onChange={(e) => setStoreForm({ ...storeForm, subcity: e.target.value })}
+                    onChange={(e) => handleSubcityChange(e.target.value)}
                   >
                     <option value="">Select Subcity</option>
                     <option value="Bole">Bole</option>
@@ -308,10 +353,25 @@ export default function StoreDashboard() {
                 </div>
               </div>
 
-              {/* Coordinates Note */}
-              <div style={{ fontSize: "0.8rem", color: "var(--text-dim)", padding: "10px 14px", background: "rgba(16,185,129,0.08)", borderRadius: "var(--radius-sm)", border: "1px solid rgba(16,185,129,0.15)" }}>
-                <MapPin size={14} style={{ display: "inline", marginRight: "4px", verticalAlign: "middle" }} />
-                Location coordinates default to central Addis Ababa (9.0192°N, 38.7525°E). Map-based pinning coming soon.
+              {/* GPS Coordinates & Pinning */}
+              <div style={{ padding: "12px", background: "rgba(16,185,129,0.08)", borderRadius: "var(--radius-sm)", border: "1px solid rgba(16,185,129,0.15)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "0.85rem", fontWeight: "600", color: "#34d399", display: "flex", alignItems: "center", gap: "4px" }}>
+                    <MapPin size={14} /> Store GPS Coordinates
+                  </span>
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={handleUseCurrentLocation}
+                    style={{ fontSize: "0.75rem", padding: "4px 10px" }}
+                  >
+                    📍 Use My Store's GPS
+                  </button>
+                </div>
+                <div style={{ fontSize: "0.8rem", color: "var(--text-dim)" }}>
+                  Lat: <code style={{ color: "#10b981" }}>{storeForm.lat}</code>, Lng: <code style={{ color: "#10b981" }}>{storeForm.lng}</code>
+                  {storeForm.subcity && ` (${storeForm.subcity} Preset)`}
+                </div>
               </div>
 
               {/* Submit */}

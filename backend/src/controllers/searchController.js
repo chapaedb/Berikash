@@ -1,7 +1,7 @@
 const Product = require("../models/Product");
 const Store = require("../models/Store");
 const ApiError = require("../utils/ApiError");
-const { sendPaginated, sendSuccess } = require("../utils/helpers");
+const { sendPaginated, sendSuccess, calculateDistanceKm } = require("../utils/helpers");
 const { PAGINATION, PRODUCT_STATUSES } = require("../config/constants");
 
 // @desc    Search and filter products with compound queries
@@ -146,12 +146,14 @@ exports.getTrendingDeals = async (req, res) => {
 // @route   GET /api/v1/search/nearby
 // @access  Public
 exports.getNearbyDeals = async (req, res) => {
-  const { lat, lng, maxDistance = 5 } = req.query;
+  const { lat, lng, maxDistance = 10 } = req.query;
 
   if (!lat || !lng) {
     throw ApiError.badRequest("Latitude (lat) and longitude (lng) parameters are required");
   }
 
+  const userLat = parseFloat(lat);
+  const userLng = parseFloat(lng);
   const maxDistMeters = parseFloat(maxDistance) * 1000;
 
   const nearbyStores = await Store.find({
@@ -161,7 +163,7 @@ exports.getNearbyDeals = async (req, res) => {
       $near: {
         $geometry: {
           type: "Point",
-          coordinates: [parseFloat(lng), parseFloat(lat)],
+          coordinates: [userLng, userLat],
         },
         $maxDistance: maxDistMeters,
       },
@@ -178,7 +180,19 @@ exports.getNearbyDeals = async (req, res) => {
     .populate("store", "name logo address location rating")
     .populate("category", "name nameAmharic icon slug")
     .sort({ discountPercentage: -1 })
-    .limit(30);
+    .limit(40);
 
-  sendSuccess(res, products);
+  // Attach distanceKm to each product
+  const productsWithDistance = products.map((p) => {
+    const pObj = p.toObject();
+    if (p.store?.location?.coordinates) {
+      const [sLng, sLat] = p.store.location.coordinates;
+      pObj.distanceKm = calculateDistanceKm(userLat, userLng, sLat, sLng);
+    } else {
+      pObj.distanceKm = null;
+    }
+    return pObj;
+  });
+
+  sendSuccess(res, productsWithDistance);
 };

@@ -90,6 +90,35 @@ function MainContent() {
         setShowNearby(false);
       }
     );
+  const [nearbyDealsMode, setNearbyDealsMode] = useState(false);
+  const [nearbyDealsLoading, setNearbyDealsLoading] = useState(false);
+
+  const findNearbyDeals = () => {
+    setLocationError(null);
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser.");
+      return;
+    }
+    setNearbyDealsLoading(true);
+    setNearbyDealsMode(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await api.get(`/search/nearby?lat=${latitude}&lng=${longitude}&maxDistance=10`);
+          setProducts(res.data || []);
+        } catch (err) {
+          setLocationError("Could not fetch deals near your location.");
+        } finally {
+          setNearbyDealsLoading(false);
+        }
+      },
+      () => {
+        setLocationError("Location access denied. Please allow location in your browser.");
+        setNearbyDealsLoading(false);
+        setNearbyDealsMode(false);
+      }
+    );
   };
 
   return (
@@ -213,11 +242,40 @@ function MainContent() {
         {/* Tab 2: Deals Browser */}
         {activeTab === "deals" && (
           <section>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
-              <h2 style={{ fontSize: "1.4rem" }}>
-                {selectedCategory ? "Filtered Deals" : "All Active Clearance Deals"}
-              </h2>
-              <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Showing {products.length} item(s)</span>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
+              <div>
+                <h2 style={{ fontSize: "1.4rem" }}>
+                  {nearbyDealsMode
+                    ? "📍 Deals Near Your Location"
+                    : selectedCategory
+                    ? "Filtered Deals"
+                    : "All Active Clearance Deals"}
+                </h2>
+                <span style={{ color: "var(--text-muted)", fontSize: "0.85rem" }}>Showing {products.length} item(s)</span>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                {nearbyDealsMode && (
+                  <button
+                    className="btn-secondary"
+                    onClick={() => {
+                      setNearbyDealsMode(false);
+                      fetchProducts();
+                    }}
+                  >
+                    All Deals
+                  </button>
+                )}
+                <button
+                  className="btn-primary"
+                  style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.88rem" }}
+                  onClick={findNearbyDeals}
+                  disabled={nearbyDealsLoading}
+                >
+                  <MapPin size={15} />
+                  {nearbyDealsLoading ? "Finding..." : "Find Deals Near Me"}
+                </button>
+              </div>
             </div>
 
             {products.length > 0 ? (

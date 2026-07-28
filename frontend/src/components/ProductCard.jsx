@@ -64,13 +64,18 @@ export default function ProductCard({ product, onSelect }) {
       {/* Product Details Body */}
       <div style={{ padding: "16px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
         <div>
-          {/* Store Name */}
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "6px" }}>
+          {/* Store Name & Distance */}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "0.8rem", color: "var(--text-muted)", marginBottom: "6px", flexWrap: "wrap" }}>
             <Store size={14} color="#10b981" />
             <span>{store?.name || "Partner Supermarket"}</span>
             {store?.address?.subcity && (
               <span style={{ display: "flex", alignItems: "center", gap: "2px", color: "var(--text-dim)" }}>
                 • <MapPin size={12} /> {store.address.subcity}
+              </span>
+            )}
+            {product.distanceKm !== undefined && product.distanceKm !== null && (
+              <span className="badge badge-discount" style={{ fontSize: "0.65rem", padding: "2px 6px" }}>
+                📍 {product.distanceKm} km away
               </span>
             )}
           </div>
