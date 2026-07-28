@@ -388,21 +388,62 @@ function MainContent() {
 
       {/* Product Detail Modal */}
       {selectedProduct && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
-          <div className="glass-card" style={{ width: "100%", maxWidth: "520px", padding: "28px", background: "#121824" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }}>
+          <div className="glass-card" style={{ width: "100%", maxWidth: "540px", padding: "28px", background: "#121824", maxHeight: "90vh", overflowY: "auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
               <div>
                 <span className="badge badge-discount">-{selectedProduct.discountPercentage}% OFF</span>
                 <h2 style={{ fontSize: "1.5rem", marginTop: "8px" }}>{selectedProduct.name}</h2>
               </div>
-              <button onClick={() => setSelectedProduct(null)} style={{ color: "var(--text-muted)" }}>✕</button>
+              <button onClick={() => setSelectedProduct(null)} style={{ color: "var(--text-muted)", fontSize: "1.2rem" }}>✕</button>
             </div>
+
+            {/* Product Image Gallery Display */}
+            {selectedProduct.images && selectedProduct.images.length > 0 && (
+              <div style={{ marginBottom: "20px" }}>
+                <div style={{ height: "240px", borderRadius: "12px", overflow: "hidden", background: "#000", border: "1px solid var(--border-color)", marginBottom: "10px" }}>
+                  <img
+                    src={`http://localhost:5000${selectedProduct.images[0]}`}
+                    alt={selectedProduct.name}
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                </div>
+                {selectedProduct.images.length > 1 && (
+                  <div style={{ display: "flex", gap: "8px", overflowX: "auto" }}>
+                    {selectedProduct.images.map((img, i) => (
+                      <div
+                        key={i}
+                        style={{ width: "56px", height: "56px", borderRadius: "6px", overflow: "hidden", border: "1px solid var(--border-color)", flexShrink: 0 }}
+                      >
+                        <img
+                          src={`http://localhost:5000${img}`}
+                          alt={`Gallery ${i + 1}`}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Description if present */}
+            {selectedProduct.description && (
+              <p style={{ color: "var(--text-muted)", fontSize: "0.9rem", marginBottom: "16px", lineHeight: "1.5" }}>
+                {selectedProduct.description}
+              </p>
+            )}
 
             <div style={{ margin: "16px 0", padding: "16px", background: "var(--bg-input)", borderRadius: "var(--radius-sm)" }}>
               <div style={{ fontSize: "0.9rem", color: "var(--text-muted)", marginBottom: "4px" }}>Available At:</div>
               <div style={{ fontSize: "1.1rem", fontWeight: "700" }}>{selectedProduct.store?.name || "Supermarket Branch"}</div>
               <div style={{ fontSize: "0.85rem", color: "var(--text-dim)", marginTop: "2px" }}>
                 📍 {selectedProduct.store?.address?.subcity || "Addis Ababa"}
+                {selectedProduct.distanceKm !== undefined && selectedProduct.distanceKm !== null && (
+                  <span style={{ color: "#10b981", fontWeight: "600", marginLeft: "8px" }}>
+                    (📍 {selectedProduct.distanceKm} km away)
+                  </span>
+                )}
               </div>
             </div>
 

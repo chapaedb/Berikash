@@ -1,5 +1,5 @@
-import React from "react";
-import { Clock, Store, MapPin, Tag, Heart } from "lucide-react";
+import React, { useState } from "react";
+import { Clock, Store, MapPin, Tag, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function ProductCard({ product, onSelect }) {
   const {
@@ -15,24 +15,110 @@ export default function ProductCard({ product, onSelect }) {
     quantity,
   } = product;
 
-  // Format date nicely
-  const expFormatted = new Date(expiryDate).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-  });
+  const [currentImg, setCurrentImg] = useState(0);
 
   const isUrgent = daysUntilExpiry <= 2;
+  const hasMultipleImages = images && images.length > 1;
+
+  const nextImg = (e) => {
+    e.stopPropagation();
+    setCurrentImg((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImg = (e) => {
+    e.stopPropagation();
+    setCurrentImg((prev) => (prev - 1 + images.length) % images.length);
+  };
 
   return (
     <div className="glass-card" style={{ overflow: "hidden", display: "flex", flexDirection: "column" }}>
       {/* Image & Discount Badge Overlay */}
       <div style={{ position: "relative", height: "180px", background: "var(--bg-surface)" }}>
         {images && images.length > 0 ? (
-          <img
-            src={`http://localhost:5000${images[0]}`}
-            alt={name}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
+          <>
+            <img
+              src={`http://localhost:5000${images[currentImg]}`}
+              alt={name}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            />
+            {/* Multi-Image Controls */}
+            {hasMultipleImages && (
+              <>
+                <button
+                  type="button"
+                  onClick={prevImg}
+                  style={{
+                    position: "absolute",
+                    left: "6px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "rgba(0,0,0,0.6)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: "26px",
+                    height: "26px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    zIndex: 2,
+                  }}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={nextImg}
+                  style={{
+                    position: "absolute",
+                    right: "6px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "rgba(0,0,0,0.6)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "50%",
+                    width: "26px",
+                    height: "26px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    zIndex: 2,
+                  }}
+                >
+                  <ChevronRight size={16} />
+                </button>
+
+                {/* Dot Indicators */}
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "8px",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    display: "flex",
+                    gap: "4px",
+                    zIndex: 2,
+                  }}
+                >
+                  {images.map((_, i) => (
+                    <div
+                      key={i}
+                      style={{
+                        width: i === currentImg ? "12px" : "6px",
+                        height: "6px",
+                        borderRadius: "3px",
+                        background: i === currentImg ? "#10b981" : "rgba(255,255,255,0.6)",
+                        transition: "all 0.2s ease",
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         ) : (
           <div
             style={{

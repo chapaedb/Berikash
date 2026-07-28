@@ -141,29 +141,92 @@ export default function StoreDashboard() {
 
   const [modalError, setModalError] = useState(null);
 
+  // Drag and drop product image states
+  const [imageFiles, setImageFiles] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleFilesAdded = (files) => {
+    const validImages = Array.from(files).filter((file) => file.type.startsWith("image/"));
+    if (validImages.length === 0) {
+      setModalError("Please select valid image files (JPEG, PNG, WebP)");
+      return;
+    }
+
+    const updated = [...imageFiles, ...validImages].slice(0, 5); // Max 5 images
+    setImageFiles(updated);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFilesAdded(e.dataTransfer.files);
+    }
+  };
+
+  const handleRemoveImage = (index) => {
+    setImageFiles(imageFiles.filter((_, i) => i !== index));
+  };
+
   const handleCreateProduct = async (e) => {
     e.preventDefault();
     setMessage(null);
     setModalError(null);
     try {
-      // Clean payload — convert numbers and remove empty optional fields
-      const payload = {
-        name: formData.name.trim(),
-        originalPrice: parseFloat(formData.originalPrice),
-        discountedPrice: parseFloat(formData.discountedPrice),
-        quantity: parseInt(formData.quantity, 10),
-        unit: formData.unit || "piece",
-        expiryDate: new Date(formData.expiryDate).toISOString(),
-      };
+      if (imageFiles.length > 0) {
+        // Submit as FormData if images are present
+        const formDataPayload = new FormData();
+        formDataPayload.append("name", formData.name.trim());
+        formDataPayload.append("originalPrice", parseFloat(formData.originalPrice));
+        formDataPayload.append("discountedPrice", parseFloat(formData.discountedPrice));
+        formDataPayload.append("quantity", parseInt(formData.quantity, 10));
+        formDataPayload.append("unit", formData.unit || "piece");
+        formDataPayload.append("expiryDate", new Date(formData.expiryDate).toISOString());
 
-      if (formData.category) payload.category = formData.category;
-      if (formData.description && formData.description.trim()) {
-        payload.description = formData.description.trim();
+        if (formData.category) formDataPayload.append("category", formData.category);
+        if (formData.description && formData.description.trim()) {
+          formDataPayload.append("description", formData.description.trim());
+        }
+
+        imageFiles.forEach((file) => {
+          formDataPayload.append("images", file);
+        });
+
+        await api.post("/products", formDataPayload, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+      } else {
+        // Clean JSON payload
+        const payload = {
+          name: formData.name.trim(),
+          originalPrice: parseFloat(formData.originalPrice),
+          discountedPrice: parseFloat(formData.discountedPrice),
+          quantity: parseInt(formData.quantity, 10),
+          unit: formData.unit || "piece",
+          expiryDate: new Date(formData.expiryDate).toISOString(),
+        };
+
+        if (formData.category) payload.category = formData.category;
+        if (formData.description && formData.description.trim()) {
+          payload.description = formData.description.trim();
+        }
+
+        await api.post("/products", payload);
       }
 
-      await api.post("/products", payload);
       setMessage({ type: "success", text: "Product posted successfully!" });
       setShowAddModal(false);
+      setImageFiles([]);
       setFormData({
         name: "",
         category: "",
@@ -517,12 +580,94 @@ export default function StoreDashboard() {
                 <input type="date" className="input-field" required value={formData.expiryDate} onChange={(e) => setFormData({ ...formData, expiryDate: e.target.value })} />
               </div>
 
-              <select className="input-field" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })}>
-                <option value="">Select Category (optional)</option>
-                {categories.map((cat) => (
-                  <option key={cat._id} value={cat._id}>{cat.icon} {cat.name}</option>
-                ))}
-              </select>
+              {/* Drag and Drop Product Photos */}
+              <div>
+                <label style={{ fontSize: "0.85rem", color: "var(--text-muted)", marginBottom: "6px", display: "block" }}>
+                  Product Photos (Up to 5)
+                </label>
+
+                {/* Drag Zone */}
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => document.getElementById("product-image-file-input").click()}
+                  style={{
+                    border: isDragging ? "2px dashed #10b981" : "2px dashed var(--border-color)",
+                    background: isDragging ? "rgba(16, 185, 129, 0.1)" : "var(--bg-input)",
+                    borderRadius: "var(--radius-sm)",
+                    padding: "20px",
+                    textAlign: "center",
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <Upload size={28} color={isDragging ? "#10b981" : "#9ca3af"} style={{ margin: "0 auto 8px" }} />
+                  <p style={{ fontSize: "0.85rem", color: "var(--text-muted)", margin: 0 }}>
+                    {isDragging ? "Drop images here" : "Drag & drop photos here, or click to browse"}
+                  </p>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-dim)" }}>PNG, JPG, WebP up to 5MB</span>
+                  <input
+                    id="product-image-file-input"
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    style={{ display: "none" }}
+                    onChange={(e) => handleFilesAdded(e.target.files)}
+                  />
+                </div>
+
+                {/* Selected Thumbnails Grid */}
+                {imageFiles.length > 0 && (
+                  <div style={{ display: "flex", gap: "10px", marginTop: "12px", flexWrap: "wrap" }}>
+                    {imageFiles.map((file, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          position: "relative",
+                          width: "64px",
+                          height: "64px",
+                          borderRadius: "8px",
+                          overflow: "hidden",
+                          border: "1px solid var(--border-color)",
+                          background: "#000",
+                        }}
+                      >
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Preview ${idx + 1}`}
+                          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        />
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveImage(idx);
+                          }}
+                          style={{
+                            position: "absolute",
+                            top: "2px",
+                            right: "2px",
+                            background: "rgba(239, 68, 68, 0.85)",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: "50%",
+                            width: "18px",
+                            height: "18px",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            cursor: "pointer",
+                            fontSize: "10px",
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "8px" }}>
                 <button type="button" className="btn-secondary" onClick={() => setShowAddModal(false)}>Cancel</button>
