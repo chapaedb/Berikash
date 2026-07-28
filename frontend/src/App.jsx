@@ -87,9 +87,9 @@ function MainContent() {
       () => {
         setLocationError("Location access denied. Please allow location in your browser.");
         setNearbyLoading(false);
-        setShowNearby(false);
       }
     );
+  };
   const [nearbyDealsMode, setNearbyDealsMode] = useState(false);
   const [nearbyDealsLoading, setNearbyDealsLoading] = useState(false);
 
