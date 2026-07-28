@@ -67,6 +67,15 @@ export default function Navbar({ activeTab, setActiveTab, searchQuery, setSearch
                   Store Dashboard
                 </button>
               )}
+              {user.role === "admin" && (
+                <button 
+                  className="btn-primary"
+                  onClick={() => setActiveTab("admin")}
+                  style={{ fontSize: "0.85rem", padding: "8px 14px", background: "linear-gradient(135deg, #6366f1, #4f46e5)" }}
+                >
+                  Admin Panel
+                </button>
+              )}
               <div 
                 style={{ 
                   display: "flex", 

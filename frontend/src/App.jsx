@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 import ProductCard from "./components/ProductCard";
 import StoreDashboard from "./components/StoreDashboard";
+import AdminDashboard from "./components/AdminDashboard";
 import AuthModal from "./components/AuthModal";
 import api from "./services/api";
 import { Sparkles, MapPin, Filter, ArrowRight, ShieldCheck, ShoppingBag, Store as StoreIcon } from "lucide-react";
@@ -384,6 +385,9 @@ function MainContent() {
 
         {/* Tab 4: Store Dashboard */}
         {activeTab === "dashboard" && <StoreDashboard />}
+
+        {/* Tab 5: Admin Panel */}
+        {activeTab === "admin" && <AdminDashboard />}
       </main>
 
       {/* Product Detail Modal */}
