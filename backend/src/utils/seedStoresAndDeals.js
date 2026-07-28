@@ -63,14 +63,14 @@ const sampleStores = [
 ];
 
 const sampleProducts = [
-  { name: "Anchor Fresh Milk 1L", brand: "Anchor", orig: 130, disc: 75, qty: 20, unit: "liter", days: 2, catSlug: "dairy" },
-  { name: "Mama's Special Wheat Bread 700g", brand: "Mama's", orig: 65, disc: 35, qty: 30, unit: "piece", days: 1, catSlug: "bakery" },
-  { name: "Prime Beef Mince 500g", brand: "Local Meats", orig: 280, disc: 160, qty: 15, unit: "pack", days: 2, catSlug: "meat" },
-  { name: "Organic Red Tomatoes 1kg", brand: "Farm Fresh", orig: 70, disc: 40, qty: 40, unit: "kg", days: 3, catSlug: "produce" },
-  { name: "Ambo Mineral Water 6x1L", brand: "Ambo", orig: 180, disc: 110, qty: 25, unit: "bundle", days: 9, catSlug: "beverages" },
-  { name: "Frozen Mixed Vegetables 1kg", brand: "Green Harvest", orig: 190, disc: 120, qty: 18, unit: "pack", days: 14, catSlug: "frozen-foods" },
-  { name: "Habesha Biscuits Variety Pack", brand: "Habesha", orig: 95, disc: 55, qty: 35, unit: "pack", days: 4, catSlug: "snacks" },
-  { name: "Holland Dairy Greek Yogurt 500g", brand: "Holland Dairy", orig: 140, disc: 85, qty: 12, unit: "piece", days: 2, catSlug: "dairy" },
+  { name: "Anchor Fresh Milk 1L", brand: "Anchor", orig: 130, disc: 75, qty: 20, unit: "liter", days: 2, catSlug: "dairy", imgs: ["/uploads/images/milk.png"] },
+  { name: "Mama's Special Wheat Bread 700g", brand: "Mama's", orig: 65, disc: 35, qty: 30, unit: "piece", days: 1, catSlug: "bakery", imgs: ["/uploads/images/bread.png"] },
+  { name: "Prime Beef Mince 500g", brand: "Local Meats", orig: 280, disc: 160, qty: 15, unit: "pack", days: 2, catSlug: "meat", imgs: ["/uploads/images/tomatoes.png"] },
+  { name: "Organic Red Tomatoes 1kg", brand: "Farm Fresh", orig: 70, disc: 40, qty: 40, unit: "kg", days: 3, catSlug: "produce", imgs: ["/uploads/images/tomatoes.png"] },
+  { name: "Ambo Mineral Water 6x1L", brand: "Ambo", orig: 180, disc: 110, qty: 25, unit: "bundle", days: 9, catSlug: "beverages", imgs: ["/uploads/images/water.png"] },
+  { name: "Frozen Mixed Vegetables 1kg", brand: "Green Harvest", orig: 190, disc: 120, qty: 18, unit: "pack", days: 14, catSlug: "frozen-foods", imgs: ["/uploads/images/tomatoes.png"] },
+  { name: "Habesha Biscuits Variety Pack", brand: "Habesha", orig: 95, disc: 55, qty: 35, unit: "pack", days: 4, catSlug: "snacks", imgs: ["/uploads/images/bread.png"] },
+  { name: "Holland Dairy Greek Yogurt 500g", brand: "Holland Dairy", orig: 140, disc: 85, qty: 12, unit: "piece", days: 2, catSlug: "dairy", imgs: ["/uploads/images/milk.png"] },
 ];
 
 const seedStoresAndDeals = async () => {
@@ -144,6 +144,7 @@ const seedStoresAndDeals = async () => {
           unit: p.unit,
           expiryDate: expiry,
           category: catId,
+          images: p.imgs || [],
           status: "available",
           isActive: true,
         });
