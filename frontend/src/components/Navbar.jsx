@@ -58,7 +58,7 @@ export default function Navbar({ activeTab, setActiveTab, searchQuery, setSearch
 
           {user ? (
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              {user.role === "store_owner" && (
+              {(user.role === "store_owner" || user.role === "admin") && (
                 <button 
                   className="btn-primary"
                   onClick={() => setActiveTab("dashboard")}
@@ -73,7 +73,7 @@ export default function Navbar({ activeTab, setActiveTab, searchQuery, setSearch
                   onClick={() => setActiveTab("admin")}
                   style={{ fontSize: "0.85rem", padding: "8px 14px", background: "linear-gradient(135deg, #6366f1, #4f46e5)" }}
                 >
-                  Admin Panel
+                  🛡️ Admin Panel
                 </button>
               )}
               <div 
