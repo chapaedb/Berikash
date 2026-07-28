@@ -138,23 +138,30 @@ const initTelegramBot = () => {
       }
     });
 
-    // ─── Location Sharing for Nearby Deals ─────────────────────────────────────
-    bot.action("cmd_nearme", (ctx) => {
-      ctx.answerCbQuery();
+    // ─── /nearme Command & Location Handler ────────────────────────────────────
+    const requestLocationMessage = (ctx) => {
       ctx.reply(
-        "📍 Please share your location to find clearance deals near you:",
+        "📍 Please tap the button below to share your current GPS location and find the closest clearance deals:",
         Markup.keyboard([
           [Markup.button.locationRequest("📍 Share My Current Location")],
         ])
           .oneTime()
           .resize()
       );
+    };
+
+    bot.command("nearme", requestLocationMessage);
+    bot.action("cmd_nearme", (ctx) => {
+      ctx.answerCbQuery();
+      requestLocationMessage(ctx);
     });
 
     bot.on("location", async (ctx) => {
       const { latitude, longitude } = ctx.message.location;
+      const { calculateDistanceKm } = require("../utils/helpers");
 
       try {
+        // Query stores near user location (15km radius)
         const stores = await Store.find({
           isActive: true,
           "verification.status": "verified",
@@ -164,10 +171,17 @@ const initTelegramBot = () => {
                 type: "Point",
                 coordinates: [longitude, latitude],
               },
-              $maxDistance: 10000, // 10km radius
+              $maxDistance: 15000, // 15km radius
             },
           },
-        }).select("_id name address");
+        }).select("_id name address location stats");
+
+        if (stores.length === 0) {
+          return ctx.reply(
+            "📍 No partner supermarkets found within 15km of your location.",
+            Markup.removeKeyboard()
+          );
+        }
 
         const storeIds = stores.map((s) => s._id);
 
@@ -176,23 +190,42 @@ const initTelegramBot = () => {
           status: "available",
           expiryDate: { $gt: new Date() },
         })
-          .populate("store", "name address")
-          .limit(5);
+          .populate("store", "name address location")
+          .sort({ discountPercentage: -1 })
+          .limit(6);
 
         if (deals.length === 0) {
-          return ctx.reply("📍 No clearance deals found within 10km of your location.");
+          return ctx.reply(
+            "📍 Found nearby stores, but none have active clearance deals right now.",
+            Markup.removeKeyboard()
+          );
         }
 
-        let message = "📍 **Deals Near You:**\n\n";
+        let message = `📍 **Closest Clearance Deals Near You:**\n\n`;
+
         deals.forEach((d, idx) => {
+          const s = d.store;
+          const [sLng, sLat] = s?.location?.coordinates || [];
+          const distKm = calculateDistanceKm(latitude, longitude, sLat, sLng);
+          const distText = distKm !== null ? ` (📍 **${distKm} km away**)` : "";
+
+          const mapsUrl = sLat && sLng ? `https://www.google.com/maps/search/?api=1&query=${sLat},${sLng}` : null;
+          const storeNameWithLink = mapsUrl ? `[${s.name}](${mapsUrl})` : s.name;
+
+          const daysLeft = d.daysUntilExpiry === 0 ? "Expires Today!" : `${d.daysUntilExpiry} days left`;
+
           message +=
-            `${idx + 1}. **${d.name}** — **${d.discountedPrice} ETB** (-${d.discountPercentage}%)\n` +
-            `   🏬 ${d.store?.name} (${d.store?.address?.subcity || "Addis Ababa"})\n\n`;
+            `${idx + 1}. **${d.name}**\n` +
+            `   💰 ~${d.originalPrice} ETB~ ➡️ **${d.discountedPrice} ETB** (-${d.discountPercentage}% OFF)\n` +
+            `   🏬 ${storeNameWithLink} — ${s.address?.subcity || "Addis Ababa"}${distText}\n` +
+            `   ⏳ ${daysLeft}\n\n`;
         });
+
+        message += `👉 Tap a supermarket name above for Google Maps directions!`;
 
         ctx.replyWithMarkdown(message, Markup.removeKeyboard());
       } catch (err) {
-        console.error("Location query error:", err.message);
+        console.error("Telegram location query error:", err.message);
         ctx.reply("❌ Failed to query nearby deals.", Markup.removeKeyboard());
       }
     });
